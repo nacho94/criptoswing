@@ -1,10 +1,20 @@
-import java.util.Scanner;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author macmini
+ */
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class Criptojuego {
-	private static boolean logenabled = true;
+	private static boolean logenabled = false;
 	private static int numTest = 0;
 	private static int numLetras = 0;
 	private static int numPalabras = 0;
@@ -15,11 +25,22 @@ public class Criptojuego {
 	private static HashMap <String, Integer> correspondencias = new HashMap < String,Integer>();
 	private static ArrayList <ArrayList <Integer>> palabrasNoCodificadas = new ArrayList <ArrayList <Integer>>();
         
-
+        public Criptojuego(ArrayList<String> encriptadas,ArrayList<String> diccionarios,String cl,int letras) {
+            limpiar();
+            this.palabras = encriptadas; 
+                this.numLetras = letras;
+                this.clave = cl;
+                String linea = "";
+                for(String s : diccionarios) {
+                    this.diccionario.add(s);
+                    inicializarCorrespondencias(s);
+                }
+		
+        }
 	public static void limpiar () {
 		numLetras = 0;
-		numPalabras = 0;
-		palabras.clear();
+		
+		
 		palabrasDecodificadas.clear();
 		clave = "";
 		diccionario.clear();
@@ -27,37 +48,9 @@ public class Criptojuego {
 		palabrasNoCodificadas.clear();
 
 	}
-	public static int pedirNumTests (Scanner scan) {
+	
+	public static void pedirTest() {
 
-		
-
-		
-		numTest = scan.nextInt();
-		log("numTest= " + Integer.toString(numTest));
-
-		
-                return numTest;
-	}
-
-	public static void pedirTest(Scanner scan) {
-		numLetras = scan.nextInt();
-		numPalabras = scan.nextInt();
-		log("numletras= " + Integer.toString(numLetras));
-		log("numPalabras= " + Integer.toString(numPalabras));
-
-		palabras.clear();
-		diccionario.clear();
-
-		scan.nextLine(); // evitar la primera linea vacia
-		for (int i=0; i<numPalabras; i++) {
-			String str = scan.nextLine();
-			palabras.add(str);
-
-		log("palabras[" + Integer.toString(i) + "]=" + str);
-
-		}
-
-		clave = scan.nextLine();
 		inicializarCorrespondencias(clave);
 		log("clave= " + clave);
 		int indice = 1;
@@ -67,18 +60,8 @@ public class Criptojuego {
 			}
 
 		}
-		log("correspondencias= " + correspondencias);
-		String linea = "";
-
-		do{
-			linea = scan.nextLine();
-			if(!linea.equals("*")) {
-				diccionario.add(linea);
-				inicializarCorrespondencias(linea);
-			}
-
-		}while(!linea.equals("*"));
-		log("diccionario= " + diccionario);
+		
+		
 	}
 
 	public static void inicializarCorrespondencias(String palabra) {
@@ -115,10 +98,10 @@ public class Criptojuego {
 		if(!existeValorCorrespondecia(numero) && correspondencias.get(letra)<=0) {
 
 			correspondencias.put(letra,numero);
-			log("añadircorrespondencia: letra= "+ letra + "  numero= "  + Integer.toString(numero));
+			log("anadircorrespondencia: letra= "+ letra + "  numero= "  + Integer.toString(numero));
 			return true;
 		}
-		log("NO añadircorrespondencia: letra= "+ letra + "  numero= "  + Integer.toString(numero));
+		log("NO anadircorrespondencia: letra= "+ letra + "  numero= "  + Integer.toString(numero));
 		return false;
 	}
 
@@ -146,20 +129,45 @@ public class Criptojuego {
 			anyadirCorrespondencias(s,enteros);
 		}
 
-		log("palabrasNoCodificadas= " + palabrasNoCodificadas);
+		int limite = 100;
+		while(!comprobar() && limite-->0) {
+			log("[PALABRASNOCODIFICADAS]= " + palabrasNoCodificadas);
 
-		for(ArrayList <Integer> enteros1 : palabrasNoCodificadas ) {
-			limpiarDiccionario();
-			String s = buscarCorrespondencia(enteros1);
-			if(s.equals("")) {
-				continue;
-			}
-			if(s.equals("e")) {
+			for(ArrayList <Integer> enteros1 : palabrasNoCodificadas ) {
+				limpiarDiccionario();
+				String s = buscarCorrespondencia(enteros1);
+				if(s.equals("")) {
+					
+					continue;
+					
+				}
+				if(s.equals("e")) {
+					
+					continue;
+				}
+				anyadirCorrespondencias(s,enteros1);
 				
-				continue;
 			}
-			anyadirCorrespondencias(s,enteros1);
+
 		}
+		if(limite<=0) {
+			log("ERROR: bucle infinito");
+		}
+
+	}
+	public static boolean comprobar() {
+		int contador = 0;
+		Iterator it = correspondencias.keySet().iterator();
+		
+		while(it.hasNext()){
+		  String key = (String) it.next();
+		  
+		  	if(correspondencias.get(key)!=0) {
+			 contador++;
+		 	}
+		}
+		
+		return contador == numLetras;
 	}
 
 	public static ArrayList <String> devolverPlalabrasNLetras(int n) {
@@ -173,11 +181,18 @@ public class Criptojuego {
 	}
 
 	public static int[] posicionDeMaximo(ArrayList <Integer> m) {
+		return posicionDeMaximo(m,0);
+	}
+
+	public static int[] posicionDeMaximo(ArrayList <Integer> m, int offset) {
 		int [] resultado = new int [3];
 		int posicion = 0;
-		Integer maximo = 0;
+		int maximo = 0;
 		for (int i=0; i<m.size(); i++) {
-			if(m.get(i) > maximo) {
+
+			int numero = m.get(i);
+			
+			if(numero >= maximo) {
 				maximo = m.get(i);
 				resultado[0]=i; // Posicion del maximo
 				resultado[1]=maximo; // valor del maximo
@@ -202,7 +217,21 @@ public class Criptojuego {
 				it.remove();
 			}
 		}
-			
+		ArrayList<String> lista = new ArrayList<String>();
+Iterator <String> itr = diccionario.iterator();
+		while(itr.hasNext()) {
+			String elemento = itr.next();
+			if(!lista.contains(elemento)) {
+				lista.add(elemento);
+			}
+		}
+		log("lista= " + lista);
+		diccionario.clear();
+		diccionario = lista;
+		
+       
+		
+		
 		log("diccionario= " + diccionario);
 	}
 
@@ -224,12 +253,28 @@ public class Criptojuego {
 			return "e";
 		}
 		ArrayList <Integer> probabilidades = new ArrayList <Integer>();
-
+		log("pnl= " + pnl);
 		for(String s : pnl) {
 			int coincidencias = 0;
 			for(int i=0; i<p.size(); i++) {
 				String letra = s.charAt(i) + "";
+				/*log("LETRA= " + letra);*/
 				if(correspondencias.containsKey(letra)) {
+					
+						if(i>0 && s.charAt(i-1)==(s.charAt(i)) ){
+							if(p.get(i-1)!=p.get(i)) {
+								coincidencias=(-1);
+								break;
+							}
+					}
+					
+					if(correspondencias.get(letra)!=0) {
+						if(correspondencias.get(letra)!=p.get(i)){
+							coincidencias=-1;
+							log("-------------------------");
+							break;
+						}
+					}
 					if(correspondencias.get(letra)==p.get(i)) {
 						coincidencias++;
 
@@ -249,7 +294,9 @@ public class Criptojuego {
 		return pnl.get(posicion[0]);
 	}
 
-	public static void imprimirCorrespondencias() {
+	public static String imprimirCorrespondencias() {
+                
+                String result = "";
 		ArrayList<String> a = new ArrayList<String>();
 		
 		Iterator it = correspondencias.keySet().iterator();
@@ -268,11 +315,11 @@ public class Criptojuego {
 		
 		for(int j=0; j<a.size(); j++){
 			if(!a.get(j).equals("%")){
-				System.out.print(a.get(j));
+				result+=a.get(j);
 			}
 		}
 
-		System.out.println();
+		return result;
 		
 	}
 
